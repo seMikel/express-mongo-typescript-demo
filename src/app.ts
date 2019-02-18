@@ -5,6 +5,7 @@ import { AppConfig } from './config';
 import { connect, Mongoose } from 'mongoose';
 import { Controller } from './controllers/controller';
 import { jwt } from './helpers/jwt';
+import { globalErrorHandler } from './helpers/globalErrorHandler';
 
 export class App {
     private app: Application;
@@ -16,7 +17,7 @@ export class App {
         this.port = config.port;
 
         this.connectToDatabase(config.connectionString);
-        this.initializeMiddlewares(config);
+        this.initializeMiddlewares(config, this.initializeControllers(controllers));
         this.initializeControllers(controllers);
     }
 
@@ -24,15 +25,19 @@ export class App {
         connect(connectionString, { useNewUrlParser: true }).then(mongoose => this.mongoose = mongoose);
     }
 
-    private initializeMiddlewares(config: AppConfig) {
+    private initializeMiddlewares(config: AppConfig, controllerInitialization: () => void) {
         this.app.use(bodyParser.json());
         this.app.use(jwt(config.secret, config.safeRoutes));
+        controllerInitialization();
+        this.app.use(globalErrorHandler);
     }
-    
-    private initializeControllers(controllers: Controller[]): void {
-        controllers.forEach((controller) => {
-            this.app.use(controller.path, controller.router);
-        });
+
+    private initializeControllers(controllers: Controller[]): () => void {
+        return () => {
+            controllers.forEach((controller) => {
+                this.app.use(controller.path, controller.router);
+            });
+        }
     }
 
     public listen() {
