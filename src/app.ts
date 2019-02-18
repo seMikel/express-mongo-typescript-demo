@@ -4,6 +4,7 @@ import { Application } from 'express';
 import { AppConfig } from './config';
 import { connect, Mongoose } from 'mongoose';
 import { Controller } from './controllers/controller';
+import { jwt } from './helpers/jwt';
 
 export class App {
     private app: Application;
@@ -25,6 +26,7 @@ export class App {
 
     private initializeMiddlewares(config: AppConfig) {
         this.app.use(bodyParser.json());
+        this.app.use(jwt(config.secret, config.safeRoutes));
     }
     
     private initializeControllers(controllers: Controller[]): void {
