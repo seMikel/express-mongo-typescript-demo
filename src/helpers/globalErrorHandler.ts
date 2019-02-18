@@ -11,6 +11,7 @@ export function globalErrorHandler(err, req: Request, res: Response, next: NextF
             res.status(401).json({ message: 'Invalid Token' });
             break;
         default:
-            res.status(500).json({ message: err.message });
+            console.log(err);
+            res.status(err.status || 500).json({ message: err.message });
     }
 }

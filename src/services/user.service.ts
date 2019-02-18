@@ -3,6 +3,8 @@ import { UserParams } from '../interfaces/user-params.interface';
 import { hashSync, compareSync } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
 import { config } from '../config';
+import { User } from '../interfaces/user.interface';
+import { Document } from 'mongoose';
 
 export async function createNewUser(params: UserParams): Promise<string> {
     if (await UserModel.findOne({ name: params.name })) {
@@ -19,4 +21,19 @@ export async function authenticateUser({ name, password }): Promise<string> {
     if (user && compareSync(password, user.hashedPass)) {
         return sign({ uid: user.id }, config.secret);
     }
+}
+
+export async function getUserData(uid: string): Promise<User & Document> {
+    return UserModel
+        .findById(uid)
+        .select('-_id -__v -hashedPass')
+        .populate('purchases.product')
+        .exec()
+}
+
+export async function setUserPurchases(uid: string, purchases: [{ product: string, amount: number }]): Promise<User & Document> {
+    return UserModel
+        .updateOne({ _id: uid }, { purchases })
+        .exec()
+        .then((e) => getUserData(uid));
 }
