@@ -6,6 +6,7 @@ import { connect, Mongoose } from 'mongoose';
 import { Controller } from './controllers/controller';
 import { jwt } from './helpers/jwt';
 import { globalErrorHandler } from './helpers/globalErrorHandler';
+import * as cors from 'cors';
 
 export class App {
     private app: Application;
@@ -26,6 +27,7 @@ export class App {
     }
 
     private initializeMiddlewares(config: AppConfig, controllerInitialization: () => void) {
+        this.app.use(cors());
         this.app.use(bodyParser.json());
         this.app.use(jwt(config.secret, config.safeRoutes));
         controllerInitialization();
